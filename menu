@@ -1,0 +1,314 @@
+import * as React from "react"
+
+export default function Menu() {
+    const [isMenuOpen, setIsMenuOpen] = React.useState(false)
+    const [isVisible, setIsVisible] = React.useState(false)
+    const touchStartRef = React.useRef<number | null>(null)
+
+    React.useEffect(() => {
+        const homeSection = document.querySelector("#home")
+        const checkVisibility = () => {
+            if (!homeSection) {
+                setIsVisible(true)
+                return
+            }
+            const homeBottom = homeSection.offsetTop + homeSection.offsetHeight
+            setIsVisible(window.scrollY > homeBottom - 100)
+        }
+
+        checkVisibility()
+        window.addEventListener("scroll", checkVisibility, { passive: true })
+        return () => window.removeEventListener("scroll", checkVisibility)
+    }, [])
+
+    React.useEffect(() => {
+        document.body.style.overflow = isMenuOpen ? "hidden" : "auto"
+    }, [isMenuOpen])
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        touchStartRef.current = e.touches[0].clientX
+    }
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (touchStartRef.current === null) return
+        const diff = touchStartRef.current - e.touches[0].clientX
+        if (Math.abs(diff) > 50) {
+            setIsMenuOpen(false)
+            touchStartRef.current = null
+        }
+    }
+
+    const scrollToSection = (sectionId: string) => {
+        setIsMenuOpen(false)
+        setTimeout(() => {
+            const section = document.querySelector(`#${sectionId}`)
+            if (section) {
+                section.scrollIntoView({ behavior: "smooth" })
+            } else {
+                window.location.href = `/monolith#${sectionId}`
+            }
+        }, 300)
+    }
+
+    const menuItems = ["РАСПИСАНИЕ", "ПРОШЕДШИЕ СОБЫТИЯ", "КОНТАКТЫ"]
+    const sectionIds = ["events", "past_events", "contacts"]
+
+    return (
+        <>
+            <style>{`
+                .menu-button {
+                    position: fixed;
+                    top: 0;
+                    right: 0;
+                    padding: 40px;
+                    font-family: 'Inter', sans-serif;
+                    font-weight: 300;
+                    font-size: 30px;
+                    letter-spacing: 0.05em;
+                    line-height: 1em;
+                    color: #000000;
+                    cursor: pointer;
+                    z-index: 1000;
+                    opacity: 0;
+                    transform: translateX(100px);
+                    transition: all 0.4s ease;
+                    pointer-events: none;
+                    background: transparent;
+                    border: none;
+                }
+
+                .menu-button.visible {
+                    opacity: 1;
+                    transform: translateX(0);
+                    pointer-events: auto;
+                }
+
+                .menu-button.open {
+                    transform: translateX(100px);
+                    opacity: 0;
+                }
+
+                .menu-overlay {
+                    position: fixed;
+                    inset: 0;
+                    background-color: #ffffff;
+                    z-index: 10000;
+                    opacity: 0;
+                    transform: translateX(100%);
+                    transition: all 0.5s ease;
+                    pointer-events: none;
+                    overflow-y: auto;
+                }
+
+                .menu-overlay.open {
+                    opacity: 1;
+                    transform: translateX(0);
+                    pointer-events: auto;
+                }
+
+                .menu-close {
+                    position: absolute;
+                    top: 40px;
+                    right: 40px;
+                    padding: 20px;
+                    cursor: pointer;
+                    z-index: 10001;
+                    background: transparent;
+                    border: none;
+                }
+
+                .menu-close svg {
+                    width: 32px;
+                    height: 32px;
+                    stroke: #000000;
+                    stroke-width: 2;
+                    fill: none;
+                    stroke-linecap: round;
+                    stroke-linejoin: round;
+                }
+
+                .menu-content {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: flex-start;
+                    align-items: flex-end;
+                    height: 100%;
+                    padding: 140px 60px 60px;
+                    box-sizing: border-box;
+                }
+
+                .menu-items {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 80px;
+                    margin-bottom: 100px;
+                    align-items: flex-end;
+                }
+
+                .menu-item {
+                    font-family: 'Unbounded', sans-serif;
+                    font-weight: 700;
+                    font-size: 32px;
+                    letter-spacing: 0.05em;
+                    line-height: 1.2em;
+                    color: #000000;
+                    cursor: pointer;
+                    background: transparent;
+                    border: none;
+                    position: relative;
+                    padding: 0;
+                    display: inline-block;
+                }
+
+                .menu-item::after {
+                    content: '';
+                    position: absolute;
+                    bottom: -5px;
+                    left: 0;
+                    width: 0;
+                    height: 3px;
+                    background-color: #000000;
+                    transition: width 0.3s ease;
+                }
+
+                .menu-item:hover::after,
+                .menu-item:active::after {
+                    width: 100%;
+                }
+
+                .menu-footer {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-end;
+                    gap: 24px;
+                    width: 100%;
+                }
+
+                .menu-link {
+                    font-family: 'Inter', sans-serif;
+                    font-weight: 500;
+                    font-size: 16px;
+                    letter-spacing: 0.03em;
+                    line-height: 1.6em;
+                    color: #000000;
+                    opacity: 0.6;
+                    text-decoration: none;
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                    text-align: right;
+                }
+
+                .menu-link:hover,
+                .menu-link:active {
+                    opacity: 0.8;
+                    transform: scale(1.1);
+                }
+
+                .menu-socials {
+                    display: flex;
+                    gap: 60px;
+                    flex-wrap: nowrap;
+                    justify-content: flex-end;
+                    width: 100%;
+                }
+
+                /* Desktop 1600px */
+                @media (max-width: 1600px) {
+                    .menu-button { padding: 20px; font-size: 23px; }
+                    .menu-close { top: 20px; right: 20px; padding: 20px 20px 20px 0; }
+                    .menu-content { padding: 120px 40px 40px; }
+                    .menu-items { gap: 60px; margin-bottom: 80px; }
+                    .menu-footer { gap: 32px; }
+                    .menu-socials { gap: 100px; }
+                }
+
+                /* Mobile 809px */
+                @media (max-width: 809px) {
+                    .menu-button { padding: 15px; font-size: 18px; }
+                    .menu-close { top: 20px; right: 10px; padding: 20px; }
+                    .menu-close svg { width: 23px; height: 23px; }
+                    .menu-content { padding: 120px 15px 20px; }
+                    .menu-items { gap: 60px; margin-bottom: 40px; margin-right: 20px; }
+                    .menu-item { font-size: 18px; letter-spacing: 0.05em; }
+                    .menu-footer { gap: 16px !important; }
+                    .menu-link { font-size: 10px; padding: 20px 20px 20px 0; }
+                    .menu-socials { gap: 30px; }
+                }
+
+                /* Mobile 320px */
+                @media (max-width: 320px) {
+                    .menu-content { padding: 120px 10px 20px; }
+                    .menu-item { font-size: 14px; }
+                    .menu-items { gap: 40px; }
+                    .menu-link { font-size: 9px; padding: 15px; }
+                    .menu-socials { gap: 20px; }
+                }
+            `}</style>
+
+            <button
+                className={`menu-button ${isVisible ? "visible" : ""} ${isMenuOpen ? "open" : ""}`}
+                onClick={() => setIsMenuOpen(true)}
+            >
+                МЕНЮ
+            </button>
+
+            <div
+                className={`menu-overlay ${isMenuOpen ? "open" : ""}`}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onClick={(e) => {
+                    if (e.target === e.currentTarget) setIsMenuOpen(false)
+                }}
+            >
+                <button
+                    className="menu-close"
+                    onClick={() => setIsMenuOpen(false)}
+                >
+                    <svg viewBox="0 0 24 24">
+                        <path d="M6 6l12 12M6 18L18 6" />
+                    </svg>
+                </button>
+
+                <div className="menu-content">
+                    <div className="menu-items">
+                        {menuItems.map((item, index) => (
+                            <button
+                                key={item}
+                                className="menu-item"
+                                onClick={() =>
+                                    scrollToSection(sectionIds[index])
+                                }
+                            >
+                                {item}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="menu-footer">
+                        <a
+                            href="mailto:HELLO@MONOLITH.GALLERY"
+                            className="menu-link"
+                        >
+                            HELLO@MONOLITH.GALLERY
+                        </a>
+                        <div className="menu-socials">
+                            {["INSTAGRAM", "BEHANCE", "LINKEDIN"].map(
+                                (social) => (
+                                    <a
+                                        key={social}
+                                        href={`https://${social.toLowerCase()}.com`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="menu-link"
+                                    >
+                                        {social}
+                                    </a>
+                                )
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </>
+    )
+}
