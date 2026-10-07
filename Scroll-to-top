@@ -1,0 +1,124 @@
+import * as React from "react"
+
+export default function ScrollToTop() {
+    const [isVisible, setIsVisible] = React.useState(false)
+    const [isDarkBackground, setIsDarkBackground] = React.useState(false)
+
+    React.useEffect(() => {
+        const handleScroll = () => {
+            // игнорирование обновления, если значение не изменилось
+            setIsVisible(window.scrollY > 50)
+        }
+
+        // Проверка при начальной загрузке
+        handleScroll()
+
+        window.addEventListener("scroll", handleScroll, { passive: true })
+        return () => window.removeEventListener("scroll", handleScroll)
+    }, [])
+
+    // Оптимизация Observer: деструктуризация и disconnect
+    React.useEffect(() => {
+        const contactsSection = document.querySelector("#contacts")
+        if (!contactsSection) return
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                setIsDarkBackground(entry.isIntersecting)
+            },
+            { threshold: 0.3 }
+        )
+
+        observer.observe(contactsSection)
+        return () => observer.disconnect()
+    }, [])
+
+    // Безопасный вызов с опциональной цепочкой
+    const scrollToHome = () => {
+        document.querySelector("#home")?.scrollIntoView({ behavior: "smooth" })
+    }
+
+    return (
+        <>
+            <style>{`
+                .scroll-btn {
+                    position: fixed;
+                    right: 20px;
+                    bottom: 50px;
+                    width: 80px;
+                    height: 80px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    z-index: 20;
+                    opacity: 0;
+                    transform: translateY(30px);
+                    transition: opacity 0.4s ease, transform 0.4s ease;
+                    pointer-events: none;
+                }
+
+                .scroll-btn.visible {
+                    opacity: 1;
+                    transform: translateY(0);
+                    pointer-events: auto;
+                }
+
+                .scroll-btn svg {
+                    width: 30px;
+                    height: 30px;
+                    /* 4. Использование CSS-переменной вместо интерполяции в стиле */
+                    stroke: var(--icon-color, #000000);
+                    stroke-width: 2;
+                    fill: none;
+                    stroke-linecap: round;
+                    stroke-linejoin: round;
+                    transition: stroke 0.4s ease;
+                }
+
+                @media (max-width: 1600px) {
+                    .scroll-btn {
+                        right: 20px;
+                        bottom: 60px;
+                        width: 60px;
+                        height: 60px;
+                    }
+                    .scroll-btn svg {
+                        width: 24px;
+                        height: 24px;
+                    }
+                }
+
+                @media (max-width: 809px) {
+                    .scroll-btn {
+                        right: 15px;
+                        bottom: 65px;
+                        width: 46px;
+                        height: 46px;
+                    }
+                    .scroll-btn svg {
+                        width: 18px;
+                        height: 18px;
+                    }
+                }
+            `}</style>
+
+            <div
+                className={`scroll-btn ${isVisible ? "visible" : ""}`}
+                style={
+                    {
+                        "--icon-color": isDarkBackground
+                            ? "#FFFFFF"
+                            : "#000000",
+                    } as React.CSSProperties
+                }
+                onClick={scrollToHome}
+                aria-label="Scroll to top"
+            >
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 23V6M5 11l7-7 7 7" />
+                </svg>
+            </div>
+        </>
+    )
+}
