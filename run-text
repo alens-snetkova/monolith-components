@@ -1,0 +1,63 @@
+import * as React from "react"
+
+export default function run_text() {
+    const text =
+        "ARCHITECTURE — INTERIOR — INSTALLATION — LANDSCAPE — URBANISM — "
+    const repeats = 3
+
+    return (
+        <>
+            <style>{`
+                .marquee-container {
+                    width: 100%;
+                    height: 13vh;
+                    background-color: #000000;
+                    overflow: hidden;
+                    display: flex;
+                    align-items: center;
+                    position: relative;
+                    z-index: 4;
+                }
+
+                .marquee-content {
+                    display: flex;
+                    animation: scroll 15s linear infinite;
+                    will-change: transform;
+                }
+
+                .marquee-content span {
+                    flex-shrink: 0;
+                    color: #ffffff;
+                    font-family: 'Inter', sans-serif;
+                    font-weight: 300;
+                    font-size: 40px;
+                    letter-spacing: 0.04em;
+                    white-space: nowrap;
+                    padding-right: 10px;
+                }
+
+                @keyframes scroll {
+                    0% { transform: translateX(0); }
+                    100% { transform: translateX(-33.333%); }
+                }
+
+                @media (max-width: 800px) {
+                    .marquee-container { height: 10vh; }
+                    .marquee-content span { font-size: 30px; }
+                }
+
+                @media (max-width: 400px) {
+                    .marquee-content span { font-size: 20px; }
+                }
+            `}</style>
+
+            <div className="marquee-container">
+                <div className="marquee-content">
+                    {Array.from({ length: repeats }).map((_, i) => (
+                        <span key={i}>{text}</span>
+                    ))}
+                </div>
+            </div>
+        </>
+    )
+}
